@@ -1,0 +1,6 @@
+applicationType: default
+defaultPackage: ch.teko
+testFramework: junit
+sourceLanguage: java
+buildTool: gradle_kotlin
+features: [app-name, data, data-jpa, flyway, gradle, http-client-test, java, java-application, jdbc-hikari, junit, logback, micronaut-aot, micronaut-build, micronaut-http-validation, netty-server, postgres, properties, readme, security-annotations, security-jwt, serialization-jackson, shade, static-resources, test-resources, validation]
