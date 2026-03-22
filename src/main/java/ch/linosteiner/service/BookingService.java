@@ -5,14 +5,18 @@ import ch.linosteiner.domain.Flight;
 import ch.linosteiner.domain.UserEntity;
 import ch.linosteiner.repository.BookingRepository;
 import ch.linosteiner.repository.FlightRepository;
+import io.micronaut.data.model.Page;
+import io.micronaut.data.model.Pageable;
 import io.micronaut.transaction.annotation.Transactional;
 import jakarta.inject.Singleton;
-
-import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class BookingService {
+    private static final Logger LOG = LoggerFactory.getLogger(BookingService.class);
     private static final String USER_NOT_FOUND = "Benutzer nicht gefunden";
+
     private final BookingRepository bookingRepository;
     private final FlightRepository flightRepository;
     private final UserService userService;
@@ -25,12 +29,15 @@ public class BookingService {
 
     @Transactional
     public Booking createBooking(Long flightId, String username) {
+        LOG.debug("Starte Transaktion für Buchung (User: {}, Flug: {})", username, flightId);
+
         Flight flight = flightRepository.findById(flightId)
                 .orElseThrow(() -> new IllegalArgumentException("Flug nicht gefunden"));
         UserEntity user = userService.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
 
         if (flight.getAvailableTickets() <= 0) {
+            LOG.warn("Buchung abgelehnt: Flug {} ist bereits ausgebucht.", flightId);
             throw new IllegalStateException("Ausgebucht");
         }
 
@@ -40,28 +47,35 @@ public class BookingService {
         Booking booking = new Booking();
         booking.setUser(user);
         booking.setFlight(flight);
-        return bookingRepository.save(booking);
+        Booking savedBooking = bookingRepository.save(booking);
+
+        LOG.debug("Transaktion erfolgreich: Tickets für Flug {} um 1 reduziert.", flightId);
+        return savedBooking;
     }
 
-    public List<Booking> getHistory(String username) {
+    public Page<Booking> getHistory(String username, Pageable pageable) {
+        LOG.debug("Hole Historie für User {}", username);
         UserEntity user = userService.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
-        return bookingRepository.findByUserIdOrderByBookingTimestampDesc(user.getId());
+        return bookingRepository.findByUserIdOrderByBookingTimestampDesc(user.getId(), pageable);
     }
 
     @Transactional
-    public void deleteAllBookingsForUser(String username) {
+    public void deleteAllBookingsForUser(String username, Pageable pageable) {
+        LOG.debug("Starte Transaktion zum Löschen aller Buchungen für User {}", username);
         UserEntity user = userService.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
 
-        List<Booking> bookings = bookingRepository.findByUserIdOrderByBookingTimestampDesc(user.getId());
+        Page<Booking> bookings = bookingRepository.findByUserIdOrderByBookingTimestampDesc(user.getId(), pageable);
+        int deleteCount = 0;
 
         for (Booking booking : bookings) {
             Flight flight = booking.getFlight();
             flight.setAvailableTickets(flight.getAvailableTickets() + 1);
             flightRepository.update(flight);
-
             bookingRepository.delete(booking);
+            deleteCount++;
         }
+        LOG.debug("Transaktion erfolgreich: {} Buchungen gelöscht und Tickets freigegeben.", deleteCount);
     }
 }

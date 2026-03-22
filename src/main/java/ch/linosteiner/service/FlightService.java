@@ -2,14 +2,17 @@ package ch.linosteiner.service;
 
 import ch.linosteiner.domain.Flight;
 import ch.linosteiner.repository.FlightRepository;
+import io.micronaut.data.model.Page;
+import io.micronaut.data.model.Pageable;
 import io.micronaut.data.repository.jpa.criteria.QuerySpecification;
 import jakarta.inject.Singleton;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.List;
 import java.util.Optional;
+
+import static org.flywaydb.core.experimental.ExperimentalDatabase.LOG;
 
 @Singleton
 public class FlightService {
@@ -20,12 +23,14 @@ public class FlightService {
         this.flightRepository = flightRepository;
     }
 
-    public List<Flight> searchFlights(
+    public Page<Flight> searchFlights(
             Optional<String> departure, Optional<String> destination,
             Optional<LocalDate> date, Optional<String> time,
             Optional<String> airline, Optional<BigDecimal> maxPrice,
-            Optional<Boolean> availableOnly
+            Optional<Boolean> availableOnly,
+            Pageable pageable
     ) {
+        LOG.debug("Baue Such-Query für Flüge auf...");
         QuerySpecification<Flight> spec = QuerySpecification.where((QuerySpecification<Flight>) null);
 
         if (departure.isPresent() && !departure.get().isBlank()) {
@@ -56,6 +61,6 @@ public class FlightService {
             spec = spec.and((root, query, cb) -> cb.greaterThan(root.get("availableTickets"), 0));
         }
 
-        return flightRepository.findAll(spec);
+        return flightRepository.findAll(spec, pageable);
     }
 }
