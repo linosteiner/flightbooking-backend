@@ -1,6 +1,9 @@
 micronaut:
   application:
     name: flightbooking-backend
+  server:
+    cors:
+      enabled: true
   security:
     authentication: bearer
     token:
@@ -8,7 +11,7 @@ micronaut:
         signatures:
           secret:
             generator:
-              secret: ${JWT_GENERATOR_SIGNATURE_SECRET:pleaseChangeThisSecretForANewOne}
+              secret: "my-super-secret-key-that-must-be-at-least-256-bits-long-for-jwt-to-work-properly-in-micronaut"
 datasources:
   default:
     url: jdbc:postgresql://localhost:5432/flightbooking
