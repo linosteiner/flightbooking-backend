@@ -1,4 +1,4 @@
-package ch.teko;
+package ch.linosteiner;
 
 
 import io.micronaut.runtime.EmbeddedApplication;

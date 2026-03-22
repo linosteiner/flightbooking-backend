@@ -1,8 +1,0 @@
-
-
-
-
-
-
-rootProject.name="flightbooking-backend"
-

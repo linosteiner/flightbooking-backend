@@ -6,7 +6,7 @@ plugins {
 }
 
 version = "0.1"
-group = "ch.teko"
+group = "ch.linosteiner"
 
 
 
@@ -31,21 +31,22 @@ dependencies {
     runtimeOnly("ch.qos.logback:logback-classic")
     runtimeOnly("org.flywaydb:flyway-database-postgresql")
     runtimeOnly("org.postgresql:postgresql")
+    runtimeOnly("org.yaml:snakeyaml")
     testImplementation("io.micronaut:micronaut-http-client")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    aotPlugins(platform("io.micronaut.platform:micronaut-platform:4.10.10"))
+    aotPlugins platform("io.micronaut.platform:micronaut-platform:4.10.10")
     aotPlugins("io.micronaut.security:micronaut-security-aot")
 }
 
 
 
 application {
-    mainClass = "ch.teko.Application"
+    mainClass = "ch.linosteiner.Application"
 }
 
 java {
-    sourceCompatibility = JavaVersion.toVersion("21")
-    targetCompatibility = JavaVersion.toVersion("21")
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
 }
 
 
@@ -62,7 +63,7 @@ micronaut {
     testRuntime("junit5")
     processing {
         incremental(true)
-        annotations("ch.teko.*")
+        annotations("ch.linosteiner.*")
     }
     aot {
         // Please review carefully the optimizations enabled below
@@ -81,8 +82,8 @@ micronaut {
 }
 
 
-tasks.named<io.micronaut.gradle.docker.NativeImageDockerfile>("dockerfileNative") {
-    jdkVersion = "21"
+tasks.named("dockerfileNative") {
+    jdkVersion = "25"
 }
 
 
